@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	configPath = "/etc/fake-zfs.toml"
+	configPath = "/etc/zettaship.toml"
 )
 
 var (
@@ -22,8 +22,6 @@ var (
 
 type Config struct {
 	ServerUrl string
-	Container string
-	Salt      string
 }
 
 func setupLogger() {

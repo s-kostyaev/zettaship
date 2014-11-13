@@ -1,3 +1,0 @@
-ServerUrl = "http://localhost:3000/"
-Container = "node0.in.ngs.ru.mem_stress.d"
-Salt = "some salt"
