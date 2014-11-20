@@ -1,6 +1,6 @@
 # Maintainer:  <s-kostyaev@ngs>
 pkgname=zettaship-git
-pkgver=0.1
+pkgver=0.3
 pkgrel=1
 pkgdesc="client for using zfs in lxc container"
 arch=('i686' 'x86_64')
