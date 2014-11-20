@@ -77,13 +77,7 @@ func createRequest() *http.Request {
 		switch os.Args[1] {
 		case "destroy":
 			method = "DELETE"
-		case "mount":
-			method = "POST"
-			if len(os.Args) == 2 {
-				method = "GET"
-			}
-		case "umount", "unmount", "create", "snap", "snapshot", "clone", "set",
-			"rename":
+		case "create", "snap", "snapshot", "clone", "set", "rename":
 			method = "POST"
 		default:
 			method = "GET"
