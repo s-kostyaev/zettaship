@@ -82,7 +82,7 @@ func createRequest() *http.Request {
 			if len(os.Args) == 2 {
 				method = "GET"
 			}
-		case "umount", "unmount", "create", "snap", "snapshot":
+		case "umount", "unmount", "create", "snap", "snapshot", "clone":
 			method = "POST"
 		default:
 			method = "GET"
