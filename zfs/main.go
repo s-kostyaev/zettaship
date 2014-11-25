@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/crackcomm/go-clitable"
+	"github.com/olekukonko/tablewriter"
 	"net/http"
 	"net/url"
 	"os"
@@ -31,15 +31,34 @@ func parseMessage(m Message) {
 	data := m["stdout"].(map[string]interface{})["data"].([]interface{})
 	format, ok := m["stdout"].(map[string]interface{})["format"].(string)
 	if ok && format == "table" {
+		table := tablewriter.NewWriter(os.Stdout)
 		head := []string{}
 		for name, _ := range data[0].(map[string]interface{}) {
 			head = append(head, name)
 		}
-		tables := []map[string]interface{}{}
-		for _, table := range data {
-			tables = append(tables, table.(map[string]interface{}))
+		table.SetHeader(head)
+		newTable := [][]string{}
+		for _, row := range data {
+			newRow := []string{}
+			for _, name := range head {
+				newRow = append(newRow,
+					row.(map[string]interface{})[name].(string))
+			}
+			newTable = append(newTable, newRow)
 		}
-		clitable.PrintTable(head, tables)
+		err := table.AppendBulk(newTable)
+		if err != nil {
+			logger.Error(err.Error())
+		}
+
+		table.SetBorder(false)
+		table.SetRowLine(false)
+		table.SetCenterSeparator("")
+		table.SetColumnSeparator("")
+		table.SetRowSeparator("")
+		table.SetAlignment(tablewriter.ALIGN_LEFT)
+
+		table.Render()
 		return
 	}
 	for _, str := range data {
