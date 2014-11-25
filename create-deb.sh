@@ -20,5 +20,5 @@ go build
 cp zfs ../../zettaship-git/usr/bin/
 cp zettaship.toml ../../zettaship-git/etc/
 cd ../..
-sed -i 's/'$1'/new_ver/g' zettaship-git/DEBIAN/control
 dpkg -b zettaship-git zettaship-git_$1_amd64.deb
+sed -i 's/'$1'/new_ver/g' zettaship-git/DEBIAN/control
