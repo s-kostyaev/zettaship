@@ -16,7 +16,7 @@ var (
 	formatter = logging.MustStringFormatter(
 		"%{time:15:04:05.000000} %{pid} %{level:.8s} %{message}")
 	loglevel = logging.INFO
-	logger   = logging.MustGetLogger("fake-zfs")
+	logger   = logging.MustGetLogger("zettaship")
 	config   = getConfig(configPath)
 )
 
