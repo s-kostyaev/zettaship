@@ -5,7 +5,6 @@ Section: unknown
 Priority: extra
 Maintainer: Sergey Kostyaev <s.kostyaev@ngs>
 Homepage: https://github.com/s-kostyaev/zettaship
-Package: zettaship-git
 Depends: 
 Description: client for zettagate
   This programm is a client side of client-server application for using zfs from lxc containers.
