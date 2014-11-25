@@ -33,20 +33,25 @@ func parseMessage(m Message) {
 	if ok && format == "table" {
 		table := tablewriter.NewWriter(os.Stdout)
 		head := []string{}
+		names := []string{}
 		for name, _ := range data[0].(map[string]interface{}) {
-			head = append(head, name)
+			head = append(head, strings.ToUpper(name))
+			names = append(names, name)
 		}
-		table.SetHeader(head)
+		err := table.Append(head)
+		if err != nil {
+			logger.Error(err.Error())
+		}
 		newTable := [][]string{}
 		for _, row := range data {
 			newRow := []string{}
-			for _, name := range head {
+			for _, name := range names {
 				newRow = append(newRow,
 					row.(map[string]interface{})[name].(string))
 			}
 			newTable = append(newTable, newRow)
 		}
-		err := table.AppendBulk(newTable)
+		err = table.AppendBulk(newTable)
 		if err != nil {
 			logger.Error(err.Error())
 		}
