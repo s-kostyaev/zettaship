@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/olekukonko/tablewriter"
+	"github.com/zazab/zhash"
 	"net/http"
 	"net/url"
 	"os"
@@ -28,9 +29,19 @@ func main() {
 }
 
 func parseMessage(m Message) {
-	data := m["stdout"].(map[string]interface{})["data"].([]interface{})
-	format, ok := m["stdout"].(map[string]interface{})["format"].(string)
-	if ok && format == "table" {
+	hash := zhash.HashFromMap(m)
+	format, err := hash.GetString("stdout", "format")
+	if err != nil && !zhash.IsNotFound(err) {
+		logger.Error(err.Error())
+		return
+	}
+
+	if format == "table" {
+		data, err := hash.GetSlice("stdout", "data")
+		if err != nil {
+			logger.Error(err.Error())
+			return
+		}
 		table := tablewriter.NewWriter(os.Stdout)
 		head := []string{}
 		names := []string{}
@@ -38,16 +49,20 @@ func parseMessage(m Message) {
 			head = append(head, strings.ToUpper(name))
 			names = append(names, name)
 		}
-		err := table.Append(head)
+		err = table.Append(head)
 		if err != nil {
 			logger.Error(err.Error())
 		}
 		newTable := [][]string{}
 		for _, row := range data {
+			rowHash := zhash.HashFromMap(row.(map[string]interface{}))
 			newRow := []string{}
 			for _, name := range names {
-				newRow = append(newRow,
-					row.(map[string]interface{})[name].(string))
+				element, err := rowHash.GetString(name)
+				if err != nil {
+					logger.Error(err.Error())
+				}
+				newRow = append(newRow, element)
 			}
 			newTable = append(newTable, newRow)
 		}
@@ -66,11 +81,20 @@ func parseMessage(m Message) {
 		table.Render()
 		return
 	}
-	for _, str := range data {
-		fmt.Println(str.(string))
+	data, err := hash.GetStringSlice("stdout", "data")
+	if err != nil {
+		logger.Error(err.Error())
+		return
 	}
-	for _, str := range m["stderr"].([]interface{}) {
-		fmt.Fprintln(os.Stderr, str.(string))
+	for _, str := range data {
+		fmt.Println(str)
+	}
+	stderr, err := hash.GetStringSlice("stderr")
+	if err != nil {
+		logger.Error(err.Error())
+	}
+	for _, str := range stderr {
+		fmt.Fprintln(os.Stderr, str)
 	}
 }
 
