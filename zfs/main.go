@@ -2,12 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/olekukonko/tablewriter"
 	"github.com/zazab/zhash"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 )
@@ -115,55 +113,19 @@ func sendRequest(req *http.Request) (Message, int, error) {
 }
 
 func createRequest() *http.Request {
-	method := ""
-	req := &http.Request{}
-	err := errors.New("")
 	if len(os.Args) == 1 {
-		req, err = http.NewRequest("GET", config.ServerUrl, nil)
+		req, err := http.NewRequest("POST", config.ServerUrl+"run/", nil)
 		if err != nil {
 			logger.Error(err.Error())
 		}
-	} else {
-		switch os.Args[1] {
-		case "destroy":
-			method = "DELETE"
-		case "create", "snap", "snapshot", "clone", "set", "rename":
-			method = "POST"
-		default:
-			method = "GET"
-		}
-		req, err = http.NewRequest(method, config.ServerUrl+os.Args[1], nil)
-		if err != nil {
-			logger.Error(err.Error())
-		}
+		return req
 	}
-	if len(os.Args) > 2 {
-		limit := len(os.Args)
-		params := url.Values{}
-		if strings.Contains(os.Args[len(os.Args)-1], "/") {
-			params.Add("last", os.Args[len(os.Args)-1])
-			limit = limit - 1
-		}
-		if len(os.Args) > 3 {
-			prev := ""
-			for _, arg := range os.Args[2:limit] {
-				if prev == "" {
-					prev = arg
-					continue
-				}
-				if strings.HasPrefix(arg, "-") {
-					params.Add(prev, "")
-					prev = arg
-					continue
-				}
-				params.Add(prev, arg)
-				prev = ""
-			}
-			if prev != "" {
-				params.Add(prev, "")
-			}
-		}
-		req.URL.RawQuery = params.Encode()
+	args := strings.Join(os.Args[2:], "+")
+	req, err := http.NewRequest("POST", config.ServerUrl+"run/"+os.Args[1]+"/"+
+		args, nil)
+	if err != nil {
+		logger.Error(err.Error())
 	}
+
 	return req
 }
