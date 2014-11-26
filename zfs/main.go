@@ -44,10 +44,12 @@ func parseMessage(m Message) {
 		}
 		table := tablewriter.NewWriter(os.Stdout)
 		head := []string{}
-		names := []string{}
-		for name, _ := range data[0].(map[string]interface{}) {
+		names, err := hash.GetStringSlice("stdout", "header")
+		if err != nil {
+			logger.Error(err.Error())
+		}
+		for _, name := range names {
 			head = append(head, strings.ToUpper(name))
-			names = append(names, name)
 		}
 		err = table.Append(head)
 		if err != nil {
