@@ -1,6 +1,6 @@
 # Maintainer:  <s-kostyaev@ngs>
 pkgname=zettaship-git
-pkgver=0.3
+pkgver=0.4
 pkgrel=1
 pkgdesc="client for using zfs in lxc container"
 arch=('i686' 'x86_64')
@@ -16,7 +16,8 @@ noextract=()
 build() {
   go get github.com/BurntSushi/toml
   go get github.com/op/go-logging
-  go get github.com/crackcomm/go-clitable
+  go get github.com/olekukonko/tablewriter
+  go get github.com/zazab/zhash
   cd ${srcdir}/${pkgname}/zfs
   go build -o zfs
 }
