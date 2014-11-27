@@ -12,9 +12,13 @@ import (
 
 type Message map[string]interface{}
 
+var (
+	commandUrl = config.ServerUrl + "run/"
+)
+
 func main() {
 	setupLogger()
-	message, statusCode, err := sendRequest(createRequest())
+	message, statusCode, err := sendCommandWithArgs(os.Args)
 	if err != nil {
 		logger.Error(err.Error())
 		return
@@ -34,57 +38,18 @@ func parseMessage(m Message) {
 		return
 	}
 
-	if format == "table" {
-		data, err := hash.GetSlice("stdout", "data")
-		if err != nil {
-			logger.Error(err.Error())
-			return
-		}
-		table := tablewriter.NewWriter(os.Stdout)
-		head := []string{}
-		names, err := hash.GetStringSlice("stdout", "header")
-		if err != nil {
-			logger.Error(err.Error())
-		}
-		for _, name := range names {
-			head = append(head, strings.ToUpper(name))
-		}
-		err = table.Append(head)
-		if err != nil {
-			logger.Error(err.Error())
-		}
-		newTable := [][]string{}
-		for _, row := range data {
-			rowHash := zhash.HashFromMap(row.(map[string]interface{}))
-			newRow := []string{}
-			for _, name := range names {
-				element, err := rowHash.GetString(name)
-				if err != nil {
-					logger.Error(err.Error())
-				}
-				newRow = append(newRow, element)
-			}
-			newTable = append(newTable, newRow)
-		}
-		err = table.AppendBulk(newTable)
-		if err != nil {
-			logger.Error(err.Error())
-		}
-
-		table.SetBorder(false)
-		table.SetRowLine(false)
-		table.SetCenterSeparator("")
-		table.SetColumnSeparator("")
-		table.SetRowSeparator("")
-		table.SetAlignment(tablewriter.ALIGN_LEFT)
-
-		table.Render()
-		return
+	switch format {
+	case "table":
+		printTable(hash)
+	default:
+		printSimple(hash)
 	}
+}
+
+func printSimple(hash zhash.Hash) {
 	data, err := hash.GetStringSlice("stdout", "data")
 	if err != nil {
 		logger.Error(err.Error())
-		return
 	}
 	for _, str := range data {
 		fmt.Println(str)
@@ -98,11 +63,56 @@ func parseMessage(m Message) {
 	}
 }
 
-func sendRequest(req *http.Request) (Message, int, error) {
-	client := &http.Client{}
-	resp, err := client.Do(req)
+func printTable(hash zhash.Hash) {
+	data, err := hash.GetSlice("stdout", "data")
 	if err != nil {
-		return nil, 0, err
+		logger.Error(err.Error())
+		return
+	}
+	columnNames, err := hash.GetStringSlice("stdout", "header")
+	if err != nil {
+		logger.Error(err.Error())
+	}
+	head := make([]string, len(columnNames))
+	for i, name := range columnNames {
+		head[i] = strings.ToUpper(name)
+	}
+	table := tablewriter.NewWriter(os.Stdout)
+	table.Append(head)
+	for _, row := range data {
+		rowHash := zhash.HashFromMap(row.(map[string]interface{}))
+		newRow := make([]string, len(columnNames))
+		for i, name := range columnNames {
+			element, err := rowHash.GetString(name)
+			if err != nil {
+				logger.Error(err.Error())
+			}
+			newRow[i] = element
+		}
+		table.Append(newRow)
+	}
+
+	table.SetBorder(false)
+	table.SetRowLine(false)
+	table.SetCenterSeparator("")
+	table.SetColumnSeparator("")
+	table.SetRowSeparator("")
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+
+	table.Render()
+}
+
+func sendCommandWithArgs(args []string) (Message, int, error) {
+	uri := ""
+	if len(args) == 1 {
+		uri = commandUrl
+	} else {
+		argString := strings.Join(args[2:], "+")
+		uri = commandUrl + args[1] + "/" + argString
+	}
+	resp, err := http.Post(uri, "application/x-www-form-urlencoded", nil)
+	if err != nil {
+		logger.Error(err.Error())
 	}
 	dec := json.NewDecoder(resp.Body)
 	m := Message{}
@@ -110,22 +120,4 @@ func sendRequest(req *http.Request) (Message, int, error) {
 		return nil, 0, err
 	}
 	return m, resp.StatusCode, nil
-}
-
-func createRequest() *http.Request {
-	if len(os.Args) == 1 {
-		req, err := http.NewRequest("POST", config.ServerUrl+"run/", nil)
-		if err != nil {
-			logger.Error(err.Error())
-		}
-		return req
-	}
-	args := strings.Join(os.Args[2:], "+")
-	req, err := http.NewRequest("POST", config.ServerUrl+"run/"+os.Args[1]+"/"+
-		args, nil)
-	if err != nil {
-		logger.Error(err.Error())
-	}
-
-	return req
 }
