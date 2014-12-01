@@ -6,6 +6,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/zazab/zhash"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 )
@@ -107,8 +108,8 @@ func sendCommandWithArgs(args []string) (Message, int, error) {
 	if len(args) == 1 {
 		uri = commandUrl
 	} else {
-		argString := strings.Join(args[2:], "+")
-		uri = commandUrl + args[1] + "/" + argString
+		argString := url.QueryEscape(strings.Join(args[1:], " "))
+		uri = commandUrl + argString
 	}
 	resp, err := http.Post(uri, "application/x-www-form-urlencoded", nil)
 	if err != nil {
