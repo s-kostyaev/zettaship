@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-type Message map[string]interface{}
+type Reply map[string]interface{}
 
 var (
 	commandUrl = config.ServerUrl + "run/"
@@ -19,20 +19,20 @@ var (
 
 func main() {
 	setupLogger()
-	message, statusCode, err := sendCommandWithArgs(os.Args)
+	reply, statusCode, err := sendCommandWithArgs(os.Args)
 	if err != nil {
 		logger.Error(err.Error())
 		return
 	}
 	if statusCode != 200 {
-		logger.Error(message["error"].(string))
+		logger.Error(reply["error"].(string))
 		return
 	}
-	parseMessage(message)
+	showReply(reply)
 }
 
-func parseMessage(m Message) {
-	hash := zhash.HashFromMap(m)
+func showReply(reply Reply) {
+	hash := zhash.HashFromMap(reply)
 	format, err := hash.GetString("stdout", "format")
 	if err != nil && !zhash.IsNotFound(err) {
 		logger.Error(err.Error())
@@ -103,22 +103,21 @@ func printTable(hash zhash.Hash) {
 	table.Render()
 }
 
-func sendCommandWithArgs(args []string) (Message, int, error) {
-	uri := ""
-	if len(args) == 1 {
-		uri = commandUrl
-	} else {
+func sendCommandWithArgs(args []string) (Reply, int, error) {
+	requestUrl := commandUrl
+	if len(args) > 1 {
 		argString := url.QueryEscape(strings.Join(args[1:], " "))
-		uri = commandUrl + argString
+		requestUrl = commandUrl + argString
 	}
-	resp, err := http.Post(uri, "application/x-www-form-urlencoded", nil)
+	response, err := http.Post(requestUrl, "application/x-www-form-urlencoded",
+		nil)
 	if err != nil {
 		logger.Error(err.Error())
 	}
-	dec := json.NewDecoder(resp.Body)
-	m := Message{}
-	if err := dec.Decode(&m); err != nil {
+	decoder := json.NewDecoder(response.Body)
+	reply := Reply{}
+	if err := decoder.Decode(&reply); err != nil {
 		return nil, 0, err
 	}
-	return m, resp.StatusCode, nil
+	return reply, response.StatusCode, nil
 }

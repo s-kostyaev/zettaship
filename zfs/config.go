@@ -12,10 +12,10 @@ const (
 )
 
 var (
-	logfile   = os.Stderr
+	logFile   = os.Stderr
 	formatter = logging.MustStringFormatter(
 		"%{time:15:04:05.000000} %{pid} %{level:.8s} %{message}")
-	loglevel = logging.INFO
+	logLevel = logging.INFO
 	logger   = logging.MustGetLogger("zettaship")
 	config   = getConfig(configPath)
 )
@@ -25,9 +25,9 @@ type Config struct {
 }
 
 func setupLogger() {
-	logging.SetBackend(logging.NewLogBackend(logfile, "", 0))
+	logging.SetBackend(logging.NewLogBackend(logFile, "", 0))
 	logging.SetFormatter(formatter)
-	logging.SetLevel(loglevel, logger.Module)
+	logging.SetLevel(logLevel, logger.Module)
 }
 
 func getConfig(configPath string) *Config {
