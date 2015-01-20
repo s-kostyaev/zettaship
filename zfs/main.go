@@ -3,12 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/olekukonko/tablewriter"
-	"github.com/zazab/zhash"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
+
+	"github.com/olekukonko/tablewriter"
+	"github.com/zazab/zhash"
 )
 
 type Reply map[string]interface{}
@@ -25,7 +26,7 @@ func main() {
 		return
 	}
 	if statusCode != 200 {
-		logger.Error(reply["error"].(string))
+		logger.Error("Got status code %d: %v", statusCode, reply)
 		return
 	}
 	showReply(reply)
