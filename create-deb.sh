@@ -1,4 +1,5 @@
 #!/bin/bash
+branch=dev
 
 if [ $# -eq 0 ]
 then
@@ -10,13 +11,11 @@ sed -i 's/new_ver/'$1'/g' zettaship-git/DEBIAN/control
 mkdir -p zettaship-git/etc
 mkdir -p zettaship-git/usr/bin
 git clone https://github.com/s-kostyaev/zettaship.git
-go get github.com/BurntSushi/toml
-go get github.com/zazab/zhash
-go get github.com/olekukonko/tablewriter
-go get github.com/op/go-logging
 cd zettaship
-git checkout dev
+git checkout $branch
 cd zfs
+deps=`go list -f '{{join .Deps "\n"}}' |  xargs go list -f '{{if not .Standard}}{{.ImportPath}}{{end}}'`
+for dep in $deps; do go get $dep; done
 go build
 cp -f zfs ../../zettaship-git/usr/bin/
 cp -f zettaship.toml ../../zettaship-git/etc/
